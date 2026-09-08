@@ -11,7 +11,11 @@
     "prepare": "husky install || echo 'Husky not found. Maybe you are installing only a subproject.'",
     "generate-env-docs": "npm run generate --workspace=contrib/tools/generate-env-docs",
     "check-env-docs": "npm run check --workspace=contrib/tools/generate-env-docs",
-    "e2e:report": "npm exec --workspace=@workadventure/e2e-report -- tsx src/cli.ts"
+    "e2e:report": "npm exec --workspace=@workadventure/e2e-report -- tsx src/cli.ts",
+    "docker:local": "docker compose -f docker-compose.standalone.yaml -f docker-compose.local.yaml up -d",
+    "docker:local:down": "docker compose -f docker-compose.standalone.yaml -f docker-compose.local.yaml down",
+    "docker:prod": "docker compose -f docker-compose.standalone.yaml up -d",
+    "docker:prod:down": "docker compose -f docker-compose.standalone.yaml down"
   },
   "workspaces": [
     "play",

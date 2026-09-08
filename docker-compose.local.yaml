@@ -1,0 +1,81 @@
+# ==============================================================================
+# WorkAdventure Local Development & Testing Override (localhost)
+# ==============================================================================
+# Usage:
+#   docker compose -f docker-compose.standalone.yaml -f docker-compose.local.yaml up -d
+#
+# This override disables Let's Encrypt SSL and runs the entire stack on http://localhost.
+# Modern browsers automatically treat http://localhost as a Secure Context,
+# allowing camera and microphone access out of the box.
+# ==============================================================================
+
+services:
+  reverse-proxy:
+    command:
+      - --log.level=INFO
+      - --providers.docker=true
+      - --providers.docker.exposedbydefault=false
+      - --entryPoints.web.address=:80
+      - --entryPoints.grpc.address=:50051
+    ports:
+      - "80:80"
+      - "50051:50051"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+
+  play:
+    environment:
+      - DOMAIN=localhost
+      - PUSHER_URL=http://localhost/
+      - FRONT_URL=/
+      - PUBLIC_MAP_STORAGE_URL=http://localhost/map-storage
+      - UPLOADER_URL=/uploader
+      - ICON_URL=/icon
+    labels:
+      - "traefik.http.routers.play.rule=Host(`localhost`) && PathPrefix(`/`)"
+      - "traefik.http.routers.play.entryPoints=web"
+      - "traefik.http.routers.play.tls=false"
+      - "traefik.http.routers.play-ws.rule=Host(`localhost`) && PathPrefix(`/ws/`)"
+      - "traefik.http.routers.play-ws.entryPoints=web"
+      - "traefik.http.routers.play-ws.tls=false"
+      - "traefik.http.routers.room-api.rule=Host(`localhost`)"
+      - "traefik.http.routers.room-api.entryPoints=grpc"
+      - "traefik.http.routers.room-api.tls=false"
+
+  back:
+    environment:
+      - DOMAIN=localhost
+      - PLAY_URL=http://localhost
+      - PUBLIC_MAP_STORAGE_URL=http://localhost/map-storage
+    labels:
+      - "traefik.http.routers.back.rule=Host(`localhost`) && PathPrefix(`/api`)"
+      - "traefik.http.routers.back.entryPoints=web"
+      - "traefik.http.routers.back.tls=false"
+
+  map-storage:
+    environment:
+      - DOMAIN=localhost
+      - PUSHER_URL=http://localhost/
+    labels:
+      - "traefik.http.routers.map-storage.rule=Host(`localhost`) && PathPrefix(`/map-storage`)"
+      - "traefik.http.routers.map-storage.entryPoints=web"
+      - "traefik.http.routers.map-storage.tls=false"
+
+  uploader:
+    environment:
+      - DOMAIN=localhost
+      - PLAY_URL=http://localhost
+      - UPLOADER_URL=http://localhost/uploader
+    labels:
+      - "traefik.http.routers.uploader.rule=Host(`localhost`) && PathPrefix(`/uploader`)"
+      - "traefik.http.routers.uploader.entryPoints=web"
+      - "traefik.http.routers.uploader.tls=false"
+
+  icon:
+    labels:
+      - "traefik.http.routers.icon.rule=Host(`localhost`) && PathPrefix(`/icon`)"
+      - "traefik.http.routers.icon.entryPoints=web"
+      - "traefik.http.routers.icon.tls=false"
+      - "traefik.http.routers.lettericons.rule=Host(`localhost`) && PathPrefix(`/lettericons`)"
+      - "traefik.http.routers.lettericons.entryPoints=web"
+      - "traefik.http.routers.lettericons.tls=false"
