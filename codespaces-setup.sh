@@ -27,9 +27,21 @@ else
   fi
 fi
 
-# 3. Start all Docker services
-echo "==> Starting WorkAdventure services..."
-docker compose -f docker-compose.standalone.yaml -f docker-compose.local.yaml up -d
+# 3. Stop any existing conflicting standalone containers
+echo "==> Stopping any previous containers..."
+docker compose -f docker-compose.standalone.yaml down 2>/dev/null || true
+
+# 4. Start all Docker services using clean Codespaces compose (Port 80 HTTP)
+echo "==> Starting WorkAdventure services via docker-compose.codespaces.yaml..."
+docker compose -f docker-compose.codespaces.yaml up -d --force-recreate
+
+echo ""
+echo "==> Waiting for services to initialize..."
+sleep 5
+
+# Quick verification test
+echo "==> Testing local Traefik routing..."
+curl -s -o /dev/null -w "HTTP Response Code: %{http_code}\n" http://localhost || true
 
 echo ""
 echo "================================================================================"
@@ -39,7 +51,8 @@ if [ -n "$CODESPACE_NAME" ]; then
   echo "  Your Public URL:"
   echo "  https://${CODESPACE_NAME}-80.app.github.dev"
   echo ""
-  echo "  NOTE: In the 'Ports' tab, make sure Port 80 visibility is set to 'Public'."
+  echo "  NOTE: In the VS Code 'PORTS' tab (bottom panel), verify Port 80 visibility"
+  echo "        is set to 'Public'. If it says 'Private', right-click -> Port Visibility -> Public."
 else
   echo "  SUCCESS! WorkAdventure is running on http://localhost"
 fi
