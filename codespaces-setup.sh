@@ -38,19 +38,24 @@ echo "==> Starting WorkAdventure services via docker-compose.codespaces.yaml..."
 docker compose -f docker-compose.codespaces.yaml up -d --force-recreate
 
 echo ""
-echo "==> Waiting for services to initialize..."
-sleep 10
+echo "==> Waiting for WorkAdventure services to become healthy..."
+for i in {1..20}; do
+  if docker compose -f docker-compose.codespaces.yaml ps play 2>/dev/null | grep -q "healthy"; then
+    echo "  All services healthy!"
+    break
+  fi
+  sleep 3
+done
+
+# Wait 2 seconds for Traefik router registration
+sleep 2
 
 # Direct check bypassing any Codespaces terminal proxy
-echo "==> Testing direct Traefik routing (bypassing proxy)..."
+echo "==> Testing direct Traefik routing..."
 HTTP_CODE_80=$(curl --noproxy "*" -s -o /dev/null -w "%{http_code}" http://127.0.0.1:80/ || echo "failed")
 HTTP_CODE_8000=$(curl --noproxy "*" -s -o /dev/null -w "%{http_code}" http://127.0.0.1:8000/ || echo "failed")
 echo "Port 80 HTTP Code: ${HTTP_CODE_80} (Expected 302 or 200)"
 echo "Port 8000 HTTP Code: ${HTTP_CODE_8000} (Expected 302 or 200)"
-
-echo ""
-echo "==> Registered Traefik Routers:"
-curl --noproxy "*" -s http://127.0.0.1:8080/api/http/routers | grep -o '"name":"[^"]*"' || true
 
 echo ""
 echo "================================================================================"
