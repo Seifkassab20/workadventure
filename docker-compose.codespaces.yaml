@@ -2,7 +2,7 @@
 # WorkAdventure GitHub Codespaces & Local Testing Compose
 # ==============================================================================
 # Self-contained, zero-merge compose file:
-# - Traefik listens on Port 80 (HTTP) without conflicting ACME / TLS redirects
+# - Traefik listens on Port 80 & 8000 (HTTP) without conflicting ACME / TLS redirects
 # - Pre-configured routing for play, back, map-storage, uploader, icon, and redis
 # ==============================================================================
 
@@ -10,13 +10,16 @@ services:
   reverse-proxy:
     image: traefik:v3.6.1
     command:
-      - --log.level=INFO
+      - --log.level=DEBUG
+      - --api.insecure=true
       - --providers.docker=true
       - --providers.docker.exposedbydefault=false
       - --entryPoints.web.address=:80
       - --entryPoints.grpc.address=:50051
     ports:
       - "80:80"
+      - "8000:80"
+      - "8080:8080"
       - "50051:50051"
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock:ro
