@@ -1,0 +1,11 @@
+{
+  "name": "WorkAdventure Virtual Office",
+  "portsAttributes": {
+    "80": {
+      "label": "WorkAdventure Virtual Office",
+      "visibility": "public",
+      "onAutoForward": "notify"
+    }
+  },
+  "postCreateCommand": "bash codespaces-setup.sh"
+}
