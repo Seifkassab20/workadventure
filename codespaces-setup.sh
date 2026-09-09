@@ -27,9 +27,11 @@ else
   fi
 fi
 
-# 3. Stop any existing conflicting standalone containers
-echo "==> Stopping any previous containers..."
+# 3. Forcefully remove any old containers
+echo "==> Removing any old containers..."
 docker compose -f docker-compose.standalone.yaml down 2>/dev/null || true
+docker compose -f docker-compose.codespaces.yaml down 2>/dev/null || true
+docker rm -f $(docker ps -aq --filter name=workadventure) 2>/dev/null || true
 
 # 4. Start all Docker services using clean Codespaces compose (Port 80 HTTP)
 echo "==> Starting WorkAdventure services via docker-compose.codespaces.yaml..."
@@ -37,7 +39,7 @@ docker compose -f docker-compose.codespaces.yaml up -d --force-recreate
 
 echo ""
 echo "==> Waiting for services to initialize..."
-sleep 8
+sleep 10
 
 # Quick verification test
 echo "==> Testing local Traefik routing..."
@@ -48,7 +50,7 @@ echo "Follow-Redirects HTTP Code: ${HTTP_CODE_L} (Expected 200)"
 
 if [ "$HTTP_CODE" = "404" ] || [ "$HTTP_CODE" = "failed" ]; then
   echo ""
-  echo "==> Diagnostic: Checking Traefik logs..."
+  echo "==> Diagnostic: Traefik Logs:"
   docker compose -f docker-compose.codespaces.yaml logs reverse-proxy --tail 25
 fi
 
