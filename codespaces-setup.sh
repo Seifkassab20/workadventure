@@ -37,7 +37,7 @@ docker compose -f docker-compose.codespaces.yaml up -d --force-recreate
 
 echo ""
 echo "==> Waiting for services to initialize..."
-sleep 6
+sleep 8
 
 # Quick verification test
 echo "==> Testing local Traefik routing..."
@@ -45,6 +45,12 @@ HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" http://localhost || echo "fai
 HTTP_CODE_L=$(curl -s -L -o /dev/null -w "%{http_code}" http://localhost || echo "failed")
 echo "Direct HTTP Code: ${HTTP_CODE} (Expected 302 or 200)"
 echo "Follow-Redirects HTTP Code: ${HTTP_CODE_L} (Expected 200)"
+
+if [ "$HTTP_CODE" = "404" ] || [ "$HTTP_CODE" = "failed" ]; then
+  echo ""
+  echo "==> Diagnostic: Checking Traefik logs..."
+  docker compose -f docker-compose.codespaces.yaml logs reverse-proxy --tail 25
+fi
 
 echo ""
 echo "================================================================================"
@@ -54,11 +60,10 @@ if [ -n "$CODESPACE_NAME" ]; then
   echo "  Your Public URL:"
   echo "  https://${CODESPACE_NAME}-80.app.github.dev"
   echo ""
-  echo "  CRITICAL STEP FOR 404/504 FIX:"
-  echo "  In VS Code, open the 'PORTS' tab (bottom panel next to Terminal):"
-  echo "  1. Look for Port 80."
-  echo "  2. If Visibility is 'Private', RIGHT-CLICK -> 'Port Visibility' -> 'Public'."
-  echo "  3. Click the Globe icon next to Port 80 to open in your browser."
+  echo "  PORTS TAB VERIFICATION:"
+  echo "  1. In Codespaces, open the 'PORTS' tab (bottom panel next to Terminal)."
+  echo "  2. For Port 80, ensure Visibility is 'Public'."
+  echo "  3. Click the Globe icon on the row for Port 80."
 else
   echo "  SUCCESS! WorkAdventure is running on http://localhost"
 fi
